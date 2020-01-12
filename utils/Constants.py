@@ -1,0 +1,7 @@
+PATH_SEPARATOR = "/"
+YEAR_TO_DATE_DASH_FORMAT = "%Y-%m-%d"
+SMALL_YEAR_TO_DATE_SLASH_FORMAT = "%y/%m/%d"
+USER_TABLE_NAME = 'user'
+NEIGHBORHOOD_TABLE_NAME = 'neighborhood'
+SUBSCRIPTION_KEY_NAME = 'subscription'
+TO_SUBSCRIBE_OBJ_NAME = 'to_subscribe.csv'
