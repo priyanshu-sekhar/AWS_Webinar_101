@@ -21,7 +21,7 @@ def create_topic(topic_name):
     :param topic_name:
     :return:
     """
-    client.create_topic(
+    return client.create_topic(
         Name=topic_name
     )
 

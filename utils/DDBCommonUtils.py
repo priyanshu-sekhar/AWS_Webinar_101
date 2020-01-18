@@ -80,7 +80,7 @@ def scan(table_name):
     return set_of_items
 
 
-def query_with_args(table_name, partition_key_name, partition_key_value, projection=None):
+def query_with_args(table_name, partition_key_name, partition_key_value, index_name=None, projection=None, role_arn=None):
     """
 
     :param table_name: Name of the table to run query on
@@ -91,24 +91,37 @@ def query_with_args(table_name, partition_key_name, partition_key_value, project
     :param role_arn: role arn under which to run the query
     :return: an array of items, where each item is a dictionary representing the row in a DDB table
     """
-    logger.info('Querying table %s with index %s for key %s having value %s with role %s', table_name,
-                partition_key_name, partition_key_value)
+    logger.info('Querying table %s with index %s for key %s having value %s with role %s', table_name, index_name,
+                partition_key_name, partition_key_value, role_arn)
     set_of_items = []
 
     try:
-        ddb_resource = get_ddb_resource()
+        ddb_resource = get_ddb_resource(role_arn=role_arn)
         table = ddb_resource.Table(table_name)
 
-        response = table.query(
-            KeyConditionExpression=Key(partition_key_name).eq(partition_key_value),
-            ProjectionExpression=projection
-        )
+        if index_name:
+            if projection:
+                response = table.query(
+                    IndexName=index_name,
+                    KeyConditionExpression=Key(partition_key_name).eq(partition_key_value),
+                    ProjectionExpression=projection
+                )
+            else:
+                response = table.query(
+                    IndexName=index_name,
+                    KeyConditionExpression=Key(partition_key_name).eq(partition_key_value)
+                )
+        else:
+            response = table.query(
+                KeyConditionExpression=Key(partition_key_name).eq(partition_key_value)
+            )
 
         for item in response['Items']:
             add_item_to_list_after_conversion(set_of_items, item)
 
         while 'LastEvaluatedKey' in response:
             response = table.query(
+                IndexName=index_name,
                 KeyConditionExpression=Key(partition_key_name).eq(partition_key_value),
                 ProjectionExpression=projection,
                 ExclusiveStartKey=response['LastEvaluatedKey']

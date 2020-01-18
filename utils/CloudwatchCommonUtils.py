@@ -5,7 +5,7 @@ import boto3
 cloudwatch = boto3.client('cloudwatch')
 
 
-def put_subscription_metric():
+def put_metric_data(metric, dimensions=None):
     """
     https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cloudwatch.html#CloudWatch.Client.put_metric_data
     response = client.put_metric_data(
@@ -40,12 +40,14 @@ def put_subscription_metric():
     )
     :return:
     """
+    metric_data = {
+        'MetricName': metric,
+        'Value': 1.0
+    }
+    if dimensions:
+        metric_data['Dimensions'] = dimensions
+
     cloudwatch.put_metric_data(
-        MetricData=[
-            {
-                'MetricName': 'SUBSCRIPTION',
-                'Value': 1.0
-            },
-        ],
+        MetricData=[metric_data],
         Namespace='NEARBY_USER'
     )

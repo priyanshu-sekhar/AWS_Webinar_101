@@ -1,6 +1,7 @@
 import logging
 
-from utils import DDBCommonUtils, S3CommonUtils, Commons, DateTimeUtils, CSVUtils
+from utils import Constants
+from utils import DDBCommonUtils, S3CommonUtils, Commons, CSVUtils
 from utils.Constants import USER_TABLE_NAME, SUBSCRIPTION_KEY_NAME, TO_SUBSCRIBE_OBJ_NAME
 
 logger = logging.getLogger()
@@ -16,17 +17,16 @@ def extract_user_data():
     This script extracts data from dynamo DB index based on date of extraction passed and saves it in specified data bucket
     """
     args = Commons.get_job_arguments(USER_DATA_EXTRACTION_JOB_ARGS)
-    date_offset = int(args.get(DATE_OFFSET_ARG, 1))
-    epoch_day = DateTimeUtils.get_epoch_in_millis_for_day(date_offset)
     data_bucket = args.get(DATA_BUCKET_ARG)
 
     try:
         # project the attributes that you need to extract
-        data_projection = "email_id,lat,lng"
+        data_projection = Constants.USER_EXTRACTION_DATA_PROJECTION
         extracted_data = DDBCommonUtils.query_with_args(
             table_name=USER_TABLE_NAME,
-            partition_key_name='creation_day',
-            partition_key_value=epoch_day,
+            index_name=Constants.USER_TABLE_STATUS_GSI,
+            partition_key_name=Constants.USER_TABLE_STATUS_GSI_PK,
+            partition_key_value=Constants.NEARBY_STATUS_TO_SUBSCRIBE,
             projection=data_projection
         )
 

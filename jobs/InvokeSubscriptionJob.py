@@ -1,5 +1,5 @@
-from utils import CloudwatchCommonUtils, DDBCommonUtils, S3CommonUtils, Commons, SNSCommonUtils, CSVUtils
-from utils.Constants import NEIGHBORHOOD_TABLE_NAME, SUBSCRIPTION_KEY_NAME, TO_SUBSCRIBE_OBJ_NAME
+from utils import CloudwatchCommonUtils, DDBCommonUtils, S3CommonUtils, Commons, SNSCommonUtils, CSVUtils, Constants
+from utils.Constants import NEIGHBORHOOD_TABLE_NAME, USER_TABLE_NAME, SUBSCRIPTION_KEY_NAME, TO_SUBSCRIBE_OBJ_NAME
 
 DATA_BUCKET_ARG = 'data_bucket'
 INVOKE_SUBSCRIPTION_JOB_ARGS = [DATA_BUCKET_ARG]
@@ -19,23 +19,39 @@ def subscribe_user_to_neighborhood(user):
     for each in neighborhoods:
         distance = Commons.get_distance_between_pair_of_coords(
             coord1={
-                'lat': each['lat'],
-                'lng': each['lng']
+                'lat': each[Constants.NEIGHBORHOOD_LAT_ATTR],
+                'lng': each[Constants.NEIGHBORHOOD_LNG_ATTR]
             },
             coord2={
-                'lat': user['lat'],
-                'lng': user['lng']
+                'lat': user[Constants.USER_LAT_ATTR],
+                'lng': user[Constants.USER_LNG_ATTR]
             }
         )
         print('distance of user from neighborhood', distance)
 
         if distance < 10000:
             SNSCommonUtils.subscribe_email_to_topic(
-                topic_name=each['subscription_arn'],
-                email_address=user['email_id']
+                topic_name=each[Constants.NEIGHBORHOOD_SUBSCRIPTION_ARN_ATTR],
+                email_address=user[Constants.USER_EMAIL_ATTR]
             )
 
-            CloudwatchCommonUtils.put_subscription_metric()
+            DDBCommonUtils.update_record(
+                table_name=USER_TABLE_NAME,
+                update_expression=Constants.UPDATE_STATUS_ATTR_EXPRESSION,
+                expression_attr_values={
+                    ':status': Constants.NEARBY_STATUS_SUBSCRIBED,
+                    ':neighborhood_id': user[Constants.NEIGHBORHOOD_TABLE_PK]
+                },
+                pk_name=Constants.USER_TABLE_PK,
+                pk_value=each[Constants.USER_TABLE_PK]
+            )
+
+            CloudwatchCommonUtils.put_metric_data(
+                metric=Constants.ALERT_NEIGHBORHOOD_METRIC,
+                dimensions=[{
+                    'Name': 'neighborhood_' + each[Constants.NEIGHBORHOOD_TABLE_PK]
+                }]
+            )
 
 
 def invoke_subscription():
@@ -58,6 +74,10 @@ def invoke_subscription():
 
     for user in CSVUtils.create_item_list_from_csv(user_content):
         subscribe_user_to_neighborhood(user)
+
+        CloudwatchCommonUtils.put_metric_data(
+            metric=Constants.SUBSCRIBED_METRIC_NAME
+        )
 
 
 invoke_subscription()
