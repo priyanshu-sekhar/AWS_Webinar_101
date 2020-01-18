@@ -41,7 +41,11 @@ Index name: NEARBY_STATUS-index
 1. Go to S3. Create buckets - `<your-name>-nearby-artifcats` and `<your-name>-nearby-user-data`
 1. Under artifacts bucket, create folder `scripts` and upload the jobs under it.
 1. Create folder `libraries` and upload `utils.egg` and `nearby.zip` 
-1. Switch to Lambda. Create Function - invokeAPIs (generic name since it contains set of APIS performing different tasks). Keep the environment as **Python 2.7**
+1. Switch to Lambda. Create Function - invokeAPIs (generic name since it contains set of APIS performing different tasks).
+```buildoutcfg
+Environment: Python 2.7
+Handlers: apis/api_handlers.insert_handler
+```
 1. Go to section - "Function code". Choose "code entry type" as "Upload a file from S3". Enter the `Object URL` path for `nearby.zip`
 1. Click on Dropdown to left of Test - Configure Test Events
 1. Create the following events -
@@ -73,7 +77,7 @@ Index name: NEARBY_STATUS-index
 
 1. Run the tests to add user and neighborhood
 1. Go to IAM - Crete role for DDB giving access to S3, DynamoDB, Cloudwatch.
-1. Switch to Glue. Create Job as per the job names under `jobs/` and copy the code as well.
+1. Switch to Glue. Create Job as per the job names under `jobs/`. Choose the IAM role created earlier.
 1. Go to Actions -> Edit Job. Point the `Script Path` and `Python library path` (under *Security config..*) to the scripts and utils.egg in Step#3.
 1. Scroll Down. Add the following Keys -
 ```buildoutcfg

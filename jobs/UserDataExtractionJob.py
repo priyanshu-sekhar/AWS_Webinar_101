@@ -7,9 +7,8 @@ from utils.Constants import USER_TABLE_NAME, SUBSCRIPTION_KEY_NAME, TO_SUBSCRIBE
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
-DATE_OFFSET_ARG = 'date_offset'
 DATA_BUCKET_ARG = 'data_bucket'
-USER_DATA_EXTRACTION_JOB_ARGS = [DATE_OFFSET_ARG, DATA_BUCKET_ARG]
+USER_DATA_EXTRACTION_JOB_ARGS = [DATA_BUCKET_ARG]
 
 
 def extract_user_data():
